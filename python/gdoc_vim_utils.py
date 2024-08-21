@@ -1,4 +1,5 @@
 import os
+import re
 
 
 def do_write(vim, query):
@@ -62,8 +63,26 @@ def doc_write(vim, query, GdocErr):
             raise GdocErr("[gdoc.vim] Something went wrong.")
 
 
+def _parse_id(id_or_url):
+    """
+    Extracts the ID from a Google Docs ID or URL.
+
+    Args:
+        id_or_url (str): A Google Docs ID or URL.
+                         Example ID "1nOa6MitVB12346QHlQabcdefgQ5nmviVR1Ye1F_jrrY"
+                         Example URL "https://docs.google.com/document/d/1nOa6MitVB12346QHlQabcdefgQ5nmviVR1Ye1F_jrrY/edit"
+
+    Returns:
+        str: The extracted ID or an empty string if no match is found.
+    """
+    pattern = re.compile(r"(?:.*/d/)?([^/]+)")
+    match = pattern.search(id_or_url)
+    return match.group(1) if match else ""
+
+
 def doc_fetch(vim, query, GdocErr):
     document_id = vim.eval("a:doc_id")
+    document_id = _parse_id(document_id)
 
     try:
         content = query.read_doc(document_id)
